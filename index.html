@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幻獣物語2 挟み変化用ルート検索ツール</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:18px;font-family:sans-serif;background:#f5f6f8;color:#222}
+.container{max-width:1800px;margin:auto}
+h1{font-size:24px;margin:0 0 18px}
+.intro-notice,.search-panel,.table-wrapper{background:#fff;border-radius:10px;box-shadow:0 2px 8px #00000012}
+.intro-notice{background:#eef6ff;border:1px solid #b8d8f5;border-left:5px solid #3478b9;padding:16px 18px;margin-bottom:18px;line-height:1.75}
+.intro-notice-title{font-weight:700;color:#174b78;margin-bottom:6px}
+.intro-notice p{margin:0;font-size:14px}
+.intro-notice p+p{margin-top:5px}
+.notice-warning{margin-top:8px!important;font-weight:700;color:#9b3c24}
+.search-panel{padding:18px;margin-bottom:16px}
+.search-grid{display:grid;grid-template-columns:repeat(3,minmax(180px,1fr));gap:14px}
+.field{position:relative;min-width:0}
+label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px}
+input,select{width:100%;height:40px;padding:0 10px;border:1px solid #ccc;border-radius:6px;background:#fff;font-size:14px}
+.option-field{padding:10px 12px;border:1px solid #d7dce2;border-radius:8px;background:#f8f9fb}
+.radio-option{display:inline-flex;align-items:center;gap:7px;margin:3px 14px 2px 0;font-weight:normal;font-size:14px;cursor:pointer}
+.radio-option input{width:auto;height:auto;margin:0}
+.option-field small{display:block;margin-top:6px;color:#606770;font-size:12px;line-height:1.45}
+.suggestions{display:none;position:absolute;z-index:30;top:100%;left:0;right:0;max-height:240px;overflow:auto;background:white;border:1px solid #ccc;box-shadow:0 3px 8px #0002}
+.suggestion-item{padding:9px;cursor:pointer;font-size:14px;border-bottom:1px solid #eee}
+.suggestion-item:hover{background:#eef3ff}
+.buttons{display:flex;gap:10px;margin-top:16px}
+button{min-height:38px;padding:0 16px;border:0;border-radius:6px;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+.search-button{background:#4285f4;color:#fff}
+.clear-button{background:#e8eaed;color:#222}
+.status{margin:12px 0;font-size:14px;color:#555;min-height:24px}
+.loading-indicator{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #b8d2f5;border-radius:8px;background:#eef5ff;color:#174a8b;font-weight:600}
+.loading-spinner{width:22px;height:22px;border:3px solid #c9dcf8;border-top-color:#2878d0;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0}
+.pagination button{background:white;border:1px solid #ccc}
+.page-info{min-width:120px;text-align:center;font-size:14px}
+.table-wrapper{width:100%;overflow:hidden}
+.split-tables{display:flex;align-items:flex-start;width:100%;min-width:0}
+.route-scroll{flex:0 1 auto;width:min(55vw,850px);min-width:0;overflow:auto;border-right:3px solid #8a98a8}
+.stats-scroll{flex:1 1 0;min-width:0;overflow:auto}
+table{border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13px}
+.route-table,.stats-table{width:max-content}
+th{position:sticky;top:0;z-index:10;height:42px;padding:7px;background:#f1f3f4;border-right:1px solid #ddd;border-bottom:1px solid #ddd;white-space:nowrap}
+td{height:62px;padding:5px 8px;background:#fff;border-right:1px solid #e0e0e0;border-bottom:1px solid #e0e0e0;vertical-align:middle}
+tbody tr:hover td{background:#fafafa}
+.class-header{width:125px;min-width:125px;max-width:125px;text-align:center}
+.monster-name{font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.item-name{margin-top:3px;color:#666;font-size:11px;overflow-wrap:anywhere}
+.dash-cell{text-align:center;color:#777}
+.number-cell{width:125px;min-width:125px;text-align:right;white-space:nowrap}
+.number-cell.max-stat{font-weight:700;color:#202124}
+.sortable{cursor:pointer;user-select:none}
+.sort-mark{margin-right:5px}
+.copy-cell{width:90px;min-width:90px;text-align:center}
+.copy-button{height:30px;padding:0 12px;background:#e8eaed;color:#222;white-space:nowrap}
+.empty{padding:30px;text-align:center;color:#777}
+.floating-header{display:none;position:fixed;top:0;z-index:100;overflow:hidden;background:#f1f3f4;box-shadow:0 2px 4px #0002;pointer-events:none}
+.floating-header table{width:max-content;background:#f1f3f4}
+.floating-header th{position:static}
+#floatingRoute{border-right:3px solid #8a98a8}
+@media(max-width:900px){body{padding:10px}.search-grid{grid-template-columns:1fr}.route-scroll{width:55vw}.class-header{width:110px;min-width:110px;max-width:110px}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>幻獣物語2 挟み変化用ルート検索ツール</h1>
+<section class="intro-notice">
+<div class="intro-notice-title">このツールについて</div>
+<p>これは幻獣物語2の挟み変化検索のために作ったツールです！</p>
+<p>検索欄に必要な情報を入力して、検索ボタンを押すと結果が表示されます。</p>
+<p>複数の条件を組み合わせて検索することもできます。</p>
+<p>他の幻獣と比較する場合は、最終変化幻獣名を空欄にして、他の条件で検索してください。</p>
+<p class="notice-warning">※初回は圧縮ルートJSONを読み込むため、通信環境によって時間がかかります。</p>
+</section>
+<div class="search-panel">
+<div class="search-grid">
+<div class="field"><label for="criterion1">最終変化幻獣名</label><input id="criterion1" autocomplete="off" placeholder="幻獣名を入力"><div id="suggestions" class="suggestions"></div></div>
+<div class="field"><label for="criterion2">S合計変化pt</label><input id="criterion2" inputmode="numeric" placeholder="例：100"></div>
+<div class="field"><label for="criterion3">A合計変化pt</label><input id="criterion3" inputmode="numeric" placeholder="例：100"></div>
+<div class="field"><label for="criterion4">D合計変化pt</label><input id="criterion4" inputmode="numeric" placeholder="例：100"></div>
+<div class="field"><label for="criterion5">A+D合計変化pt</label><input id="criterion5" inputmode="numeric" placeholder="例：200"></div>
+<div class="field"><label for="criterion6">S+A+D合計変化pt</label><input id="criterion6" inputmode="numeric" placeholder="例：300"></div>
+<div class="field option-field"><label class="radio-option"><input type="checkbox" id="messengerEnabledCheckbox">御使いあり</label><small>チェックすると各ptに御使い分を加算して検索・表示します。</small></div>
+<div class="field option-field"><label class="radio-option"><input type="checkbox" id="includeVersionVariants">バージョン違いあり</label><small>チェックなしの場合、【】を含む幻獣名がルートにある結果を除外します。</small></div>
+</div>
+<div class="buttons"><button id="searchButton" class="search-button">検索</button><button id="clearButton" class="clear-button">クリア</button></div>
+</div>
+<div id="status" class="status">JSONデータを読み込み中です…</div>
+<div class="pagination"><button id="prevButton" disabled>← 前へ</button><div id="pageInfo" class="page-info">0件</div><button id="nextButton" disabled>次へ →</button></div>
+<div class="table-wrapper"><div class="split-tables">
+<div class="route-scroll" id="routeScroll"><table class="route-table"><thead><tr id="classHeaderRow"></tr></thead><tbody id="routeBody"></tbody></table></div>
+<div class="stats-scroll" id="statsScroll"><table class="stats-table"><thead><tr id="statsHeaderRow">
+<th class="number-cell sortable" data-sort-column="16"><span class="sort-mark">▴▾</span>S合計変化pt</th>
+<th class="number-cell sortable" data-sort-column="17"><span class="sort-mark">▴▾</span>A合計変化pt</th>
+<th class="number-cell sortable" data-sort-column="18"><span class="sort-mark">▴▾</span>D合計変化pt</th>
+<th class="number-cell sortable" data-sort-column="19"><span class="sort-mark">▴▾</span>A+D合計変化pt</th>
+<th class="number-cell sortable" data-sort-column="20"><span class="sort-mark">▴▾</span>S+A+D合計変化pt</th>
+<th class="copy-cell">画像出力</th>
+</tr></thead><tbody id="statsBody"></tbody></table></div>
+</div></div>
+</div>
+<div id="floatingRoute" class="floating-header"><table><thead><tr id="floatingRouteRow"></tr></thead></table></div>
+<div id="floatingStats" class="floating-header"><table><thead><tr id="floatingStatsRow"></tr></thead></table></div>
+<script>
+const CATALOG_URL='data/幻獣図鑑.json', ROUTES_URL='data/変化ルート.json.gz';
+const PAGE_SIZE=1000, ROUTE_COLUMN_COUNT=16, NUMERIC_COLUMN_START=16, TOTAL_COLUMN_COUNT=21, MESSENGER_NAME='御使い';
+let sourceData=[],allData=[],filteredData=[],monsterNames=[],monsterItems={},monsterClasses={},classSlots=[],namesLoaded=false,dataLoaded=false,loading=false,currentPage=1,sortColumn=null,sortDirection=null;
+const $=id=>document.getElementById(id), criterionInputs=[...Array(6)].map((_,i)=>$('criterion'+(i+1))),suggestions=$('suggestions'),searchButton=$('searchButton'),clearButton=$('clearButton'),status=$('status'),routeBody=$('routeBody'),statsBody=$('statsBody'),classHeaderRow=$('classHeaderRow'),prevButton=$('prevButton'),nextButton=$('nextButton'),pageInfo=$('pageInfo'),messengerEnabledCheckbox=$('messengerEnabledCheckbox'),includeVersionVariantsCheckbox=$('includeVersionVariants'),routeScroll=$('routeScroll'),statsScroll=$('statsScroll'),floatingRoute=$('floatingRoute'),floatingStats=$('floatingStats');
+const nonempty=v=>v!==null&&v!==undefined&&String(v).trim()!=='';
+function toNumber(v){if(!nonempty(v))return null;const n=Number(String(v).replace(/,/g,'').trim());return Number.isFinite(n)?n:null}
+function getMessengerMode(){return messengerEnabledCheckbox.checked?'yes':'no'}
+async function loadJson(url){
+  const r=await fetch(url);
+  if(!r.ok)throw new Error(`${url}: HTTP ${r.status}`);
+  if(url.endsWith('.gz')){
+    if(!('DecompressionStream' in window))throw new Error('このブラウザはgzip展開に対応していません');
+    if(!r.body)throw new Error('レスポンス本文を読み込めませんでした');
+    const stream=r.body.pipeThrough(new DecompressionStream('gzip'));
+    return await new Response(stream).json();
+  }
+  return r.json();
+}
+async function init(){
+ setLoading(true);
+ try{
+  const [cat,routeSheet]=await Promise.all([loadJson(CATALOG_URL),loadJson(ROUTES_URL)]);
+  const rows=routeSheet.rows||[],headers=routeSheet.headers||[];
+  monsterItems={};monsterClasses={};monsterNames=[];
+  for(const r of cat.rows||[]){const n=String(r[1]??'').trim();if(!n)continue;monsterNames.push(n);monsterItems[n]=String(r[2]??'').trim();monsterClasses[n]=String(r[3]??'').trim()||'不明'}
+  monsterNames=[...new Set(monsterNames)].sort((a,b)=>a.localeCompare(b,'ja'));
+  // 6列ごとの「ルート文字列 + S/A/D/AD/SAD」。先頭列が単独名のグループもルートとして扱う。
+  sourceData=[];
+  for(const row of rows){for(let i=0;i+5<headers.length;i+=6){const path=String(row[i]??'').trim();if(!path)continue;const parts=path.split(/\s*→\s*/).map(x=>x.trim()).filter(Boolean);if(!parts.length)continue;const stats=row.slice(i+1,i+6);sourceData.push({parts,stats})}}
+  dataLoaded=true;filteredData=applyFilters(prepareDisplayData(sourceData));buildClassSlots(filteredData);applySort();render();setLoading(false);status.textContent=`読み込み完了：ルート ${sourceData.length.toLocaleString()}件／幻獣 ${monsterNames.length.toLocaleString()}体`;updateFloatingHeaders();
+ }catch(e){console.error(e);setLoading(false);status.textContent='データの読み込みに失敗しました: '+e.message+'。GitHub Pages上で開き、dataフォルダーにJSON/GZファイルがあるか確認してください。'}
+}
+function prepareDisplayData(routes){const offsets=[6,6,6,12,18],withMessenger=getMessengerMode()==='yes';return routes.map(r=>{let parts=r.parts.slice();if(withMessenger)parts.unshift(MESSENGER_NAME);const stats=r.stats.map((v,i)=>{if(!withMessenger)return v;const n=toNumber(v);return n===null?v:n+offsets[i]});return [...parts,...Array(Math.max(0,ROUTE_COLUMN_COUNT-parts.length)).fill(''),...stats]})}
+function getFinalMonsterName(row){for(let i=ROUTE_COLUMN_COUNT-1;i>=0;i--){const v=String(row[i]??'').trim();if(v)return v}return ''}
+function getCriteria(){return criterionInputs.map(x=>x.value.trim())}
+function applyFilters(data){const c=getCriteria();return data.filter(row=>{if(!includeVersionVariantsCheckbox.checked&&row.slice(0,ROUTE_COLUMN_COUNT).some(v=>/【[^】]*】|【|】/.test(String(v??''))))return false;if(c[0]&&getFinalMonsterName(row)!==c[0])return false;for(let i=1;i<6;i++){if(c[i]==='')continue;const target=toNumber(c[i]),value=toNumber(row[NUMERIC_COLUMN_START+i-1]);if(target===null||value===null||value!==target)return false}return true})}
+function getClassForMonster(n){return String(monsterClasses[n]||'').trim()||'不明'}
+function buildClassSlots(rows){const order=[],seen=new Set(),max={};for(const row of rows){const counts={};for(let i=0;i<ROUTE_COLUMN_COUNT;i++){const n=String(row[i]??'').trim();if(!n)continue;const cl=getClassForMonster(n);if(!seen.has(cl)){seen.add(cl);order.push(cl)}counts[cl]=(counts[cl]||0)+1}for(const [cl,n] of Object.entries(counts))max[cl]=Math.max(max[cl]||0,n)}classSlots=[];for(const cl of order)for(let i=0;i<(max[cl]||1);i++)classSlots.push({monsterClass:cl,occurrence:i});renderClassHeaders()}
+function getClassSlotValues(row){const by={};for(let i=0;i<ROUTE_COLUMN_COUNT;i++){const name=String(row[i]??'').trim();if(!name)continue;const cl=getClassForMonster(name);(by[cl]||(by[cl]=[])).push({name,item:monsterItems[name]||''})}return classSlots.map(s=>(by[s.monsterClass]||[])[s.occurrence]||null)}
+function getClassHeaderLabel(s){const count=classSlots.filter(x=>x.monsterClass===s.monsterClass).length;return count===1?`Class${s.monsterClass}`:`Class${s.monsterClass}-${s.occurrence+1}`}
+function renderClassHeaders(){classHeaderRow.innerHTML='';if(!classSlots.length){const th=document.createElement('th');th.className='class-header';th.textContent='Class';classHeaderRow.append(th)}else classSlots.forEach(s=>{const th=document.createElement('th');th.className='class-header';th.textContent=getClassHeaderLabel(s);classHeaderRow.append(th)});updateFloatingHeaders()}
+function executeSearch(){if(!dataLoaded||loading)return;hideSuggestions();filteredData=applyFilters(prepareDisplayData(sourceData));buildClassSlots(filteredData);applySort();currentPage=1;render()}
+searchButton.addEventListener('click',executeSearch);
+clearButton.addEventListener('click',()=>{if(loading)return;criterionInputs.forEach(x=>x.value='');messengerEnabledCheckbox.checked=false;includeVersionVariantsCheckbox.checked=false;sortColumn=sortDirection=null;updateSortMarks();executeSearch()});
+messengerEnabledCheckbox.addEventListener('change',executeSearch);includeVersionVariantsCheckbox.addEventListener('change',executeSearch);
+$('criterion1').addEventListener('focus',showSuggestions);$('criterion1').addEventListener('input',showSuggestions);
+function showSuggestions(){const key=$('criterion1').value.trim().toLocaleLowerCase('ja');const names=monsterNames.filter(n=>!key||n.toLocaleLowerCase('ja').includes(key)).slice(0,100);suggestions.innerHTML='';if(!names.length){hideSuggestions();return}for(const n of names){const d=document.createElement('div');d.className='suggestion-item';d.textContent=n;d.addEventListener('mousedown',e=>{e.preventDefault();$('criterion1').value=n;hideSuggestions()});d.addEventListener('touchend',e=>{e.preventDefault();$('criterion1').value=n;hideSuggestions()},{passive:false});suggestions.append(d)}suggestions.style.display='block'}
+function hideSuggestions(){suggestions.style.display='none'}
+document.addEventListener('click',e=>{if(!e.target.closest('.field'))hideSuggestions()});
+criterionInputs.forEach(x=>x.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();hideSuggestions();executeSearch()}}));
+document.querySelectorAll('th.sortable').forEach(h=>h.addEventListener('click',()=>{if(!dataLoaded||loading)return;const col=Number(h.dataset.sortColumn);if(sortColumn!==col){sortColumn=col;sortDirection='asc'}else if(sortDirection==='asc')sortDirection='desc';else{sortColumn=sortDirection=null}applySort();currentPage=1;render()}));
+function applySort(){if(sortColumn!==null&&sortDirection)filteredData.sort((a,b)=>{const av=toNumber(a[sortColumn]),bv=toNumber(b[sortColumn]);if(av===null&&bv===null)return 0;if(av===null)return 1;if(bv===null)return -1;return sortDirection==='asc'?av-bv:bv-av});updateSortMarks()}
+function updateSortMarks(){document.querySelectorAll('th.sortable').forEach(h=>{const m=h.querySelector('.sort-mark'),c=Number(h.dataset.sortColumn);m.textContent=c===sortColumn?(sortDirection==='asc'?'▴':'▾'):'▴▾'})}
+function render(){const total=filteredData.length,pages=Math.max(1,Math.ceil(total/PAGE_SIZE));currentPage=Math.max(1,Math.min(currentPage,pages));const start=(currentPage-1)*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,total);renderTables(filteredData.slice(start,end));pageInfo.textContent=total?`${currentPage} / ${pages}ページ`:'0件';prevButton.disabled=currentPage<=1||!total;nextButton.disabled=currentPage>=pages||!total;status.textContent=total?`${total.toLocaleString()}件中 ${(start+1).toLocaleString()}～${end.toLocaleString()}件を表示`:'該当するデータがありません。';updateFloatingHeaders()}
+function getMaxStats(rows){const a=Array(5).fill(null);for(const r of rows)for(let i=0;i<5;i++){const n=toNumber(r[NUMERIC_COLUMN_START+i]);if(n!==null&&(a[i]===null||n>a[i]))a[i]=n}return a}
+function getStatHighlight(i){return ['#dff0d8','#f8dede','#dceafb','linear-gradient(to right,#f8dede 0%,#f8dede 50%,#dceafb 50%,#dceafb 100%)','linear-gradient(to right,#dff0d8 0%,#dff0d8 33.333%,#f8dede 33.333%,#f8dede 66.666%,#dceafb 66.666%,#dceafb 100%)'][i]}
+function renderTables(data){routeBody.innerHTML='';statsBody.innerHTML='';if(!data.length){for(const [body,cols] of [[routeBody,Math.max(classSlots.length,1)],[statsBody,6]]){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=cols;td.className='empty';td.textContent='該当するデータがありません。';tr.append(td);body.append(tr)}return}const max=getMaxStats(filteredData),rf=document.createDocumentFragment(),sf=document.createDocumentFragment();for(const row of data){const rt=document.createElement('tr'),st=document.createElement('tr');for(const v of getClassSlotValues(row)){const td=document.createElement('td');td.className='class-header';if(!v){td.classList.add('dash-cell');td.textContent='-'}else{const d=document.createElement('div');d.className='monster-name';d.textContent=v.name;td.append(d);if(v.item){const it=document.createElement('div');it.className='item-name';it.textContent=`(${v.item})`;td.append(it)}}rt.append(td)}for(let i=NUMERIC_COLUMN_START;i<TOTAL_COLUMN_COUNT;i++){const td=document.createElement('td');td.className='number-cell';td.textContent=row[i]??'';const ix=i-NUMERIC_COLUMN_START,n=toNumber(row[i]);if(n!==null&&max[ix]!==null&&n===max[ix]){td.classList.add('max-stat');td.style.background=getStatHighlight(ix);td.title='検索結果内で最大の変化pt'}st.append(td)}const copy=document.createElement('td'),b=document.createElement('button');copy.className='copy-cell';b.className='copy-button';b.textContent='画像出力';b.onclick=()=>exportRowImage(row);copy.append(b);st.append(copy);rf.append(rt);sf.append(st)}routeBody.append(rf);statsBody.append(sf)}
+async function exportRowImage(row){const route=[];for(let i=0;i<ROUTE_COLUMN_COUNT;i++){const name=String(row[i]??'').trim();if(name)route.push({name,item:monsterItems[name]||''})}const labels=['S','A','D','AD','SAD'],values=row.slice(NUMERIC_COLUMN_START,TOTAL_COLUMN_COUNT).map(v=>String(v??'')),scale=2,pad=22,gap=22,title=44,rh=42,sw=42,w=560,inner=w-pad*2,h=pad+title+Math.max(route.length,1)*rh+gap+title+sw*2+pad;const c=document.createElement('canvas');c.width=w*scale;c.height=h*scale;const x=c.getContext('2d');x.scale(scale,scale);x.fillStyle='#fff';x.fillRect(0,0,w,h);x.textBaseline='middle';function cell(a,b,cw,ch,t,fill='#fff',bold=false){x.fillStyle=fill;x.fillRect(a,b,cw,ch);x.strokeStyle='#000';x.strokeRect(a,b,cw,ch);x.fillStyle='#111';x.font=(bold?'bold ':'')+'16px sans-serif';x.save();x.beginPath();x.rect(a+5,b+1,cw-10,ch-2);x.clip();x.fillText(String(t??''),a+8,b+ch/2,cw-16);x.restore()}let y=pad;cell(pad,y,inner,title,'変化ルート','#f1f3f4',true);y+=title;if(route.length)route.forEach((r,i)=>{cell(pad,y,48,rh,String(i+1),'#f8f9fa',true);cell(pad+48,y,inner-48,rh,r.item?`${r.name}(${r.item})`:r.name);y+=rh});else{cell(pad,y,inner,rh,'ルート情報なし');y+=rh}y+=gap;cell(pad,y,inner,title,'合計pt','#f1f3f4',true);y+=title;const cw=inner/5;labels.forEach((lab,i)=>{const fill=['#dff0d8','#f8dede','#dceafb','#f8dede','#dff0d8'][i];cell(pad+i*cw,y,cw,sw,lab,'#f8f9fa',true);cell(pad+i*cw,y+sw,cw,sw,values[i],fill,true)});const blob=await new Promise(res=>c.toBlob(res,'image/png'));if(!blob){status.textContent='画像を作成できませんでした。';return}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='変化ルート.png';a.click();URL.revokeObjectURL(url);status.textContent='PNG画像を保存しました。'}
+prevButton.onclick=()=>{if(currentPage>1){currentPage--;render()}};
+nextButton.onclick=()=>{if(currentPage<Math.ceil(filteredData.length/PAGE_SIZE)){currentPage++;render()}};
+function setLoading(v){loading=v;searchButton.disabled=v;clearButton.disabled=v;if(v)status.innerHTML='<span class="loading-indicator"><span class="loading-spinner"></span><span>データを読み込み中です。しばらくお待ちください...</span></span>'}
+function updateFloatingHeaders(){const rh=$('floatingRouteRow'),sh=$('floatingStatsRow');if(!rh||!sh)return;rh.innerHTML='';sh.innerHTML='';const rhead=routeScroll.querySelector('thead'),shead=statsScroll.querySelector('thead');if(!rhead||!shead)return;rhead.querySelectorAll('th').forEach(t=>rh.append(t.cloneNode(true)));shead.querySelectorAll('th').forEach(t=>sh.append(t.cloneNode(true)));const rr=routeScroll.getBoundingClientRect(),sr=statsScroll.getBoundingClientRect(),rhr=rhead.getBoundingClientRect(),shr=shead.getBoundingClientRect(),tb=routeBody.getBoundingClientRect(),hh=Math.max(rhr.height,shr.height),show=rhr.top<0&&tb.bottom>hh&&filteredData.length>0;if(!show){floatingRoute.style.display=floatingStats.style.display='none';return}floatingRoute.style.display=floatingStats.style.display='block';floatingRoute.style.left=rr.left+'px';floatingRoute.style.width=rr.width+'px';floatingRoute.style.height=hh+'px';floatingStats.style.left=sr.left+'px';floatingStats.style.width=sr.width+'px';floatingStats.style.height=hh+'px';floatingRoute.querySelector('table').style.transform=`translateX(${-routeScroll.scrollLeft}px)`;floatingStats.querySelector('table').style.transform=`translateX(${-statsScroll.scrollLeft}px)'}
+routeScroll.addEventListener('scroll',updateFloatingHeaders);statsScroll.addEventListener('scroll',updateFloatingHeaders);window.addEventListener('scroll',updateFloatingHeaders,{passive:true});window.addEventListener('resize',updateFloatingHeaders);init();
+</script>
+</body>
+</html>
